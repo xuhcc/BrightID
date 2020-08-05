@@ -5,6 +5,7 @@ import Adapter from 'enzyme-adapter-react-16';
 import MockAsyncStorage from 'mock-async-storage';
 import { NativeModules } from 'react-native';
 import { randomBytes } from 'crypto';
+import { enableFetchMocks } from 'jest-fetch-mock';
 
 // jest.mock('@react-native-community/async-storage', () => mockAsyncStorage);
 
@@ -24,3 +25,5 @@ NativeModules.RNRandomBytes = {
     cb(null, buf.toString('base64'));
   },
 };
+
+enableFetchMocks();
