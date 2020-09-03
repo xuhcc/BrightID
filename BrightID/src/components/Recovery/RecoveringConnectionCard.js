@@ -12,6 +12,7 @@ import {
 import { connect } from 'react-redux';
 import RNFS from 'react-native-fs';
 import moment from 'moment';
+import { retrieveImage } from '@/utils/filesystem';
 import { DEVICE_TYPE } from '@/utils/constants';
 import backupApi from '@/api/backupService';
 import { parseRecoveryQr } from './helpers';
@@ -22,8 +23,14 @@ class RecoveryConnectionCard extends React.PureComponent<Props> {
       const { signingKey, timestamp } = parseRecoveryQr(
         this.props.recoveryRequestCode,
       );
-
-      await backupApi.setSig({ id: this.props.id, timestamp, signingKey });
+      const photo = await retrieveImage(this.props.photo.filename);
+      await backupApi.setSig({
+        id: this.props.id,
+        name: this.props.name,
+        photo,
+        timestamp,
+        signingKey
+      });
 
       Alert.alert(
         'Info',

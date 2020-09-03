@@ -4,6 +4,8 @@ import { SET_RECOVERY_DATA, REMOVE_RECOVERY_DATA } from '@/actions';
 
 export const initialState = {
   id: '',
+  name: '',
+  photo: '',
   publicKey: '',
   secretKey: '',
   timestamp: 0,
@@ -22,6 +24,8 @@ export const reducer = (state: RecoveryData = initialState, action: action) => {
         publicKey: '',
         secretKey: '',
         id: '',
+        name: '',
+        photo: '',
         timestamp: 0,
         sigs: [],
       };

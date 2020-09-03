@@ -6,8 +6,10 @@ import {
   strToUint8Array,
   uInt8ArrayToB64,
   b64ToUrlSafeB64,
+  b64ToUint8Array,
 } from '@/utils/encoding';
 import { obtainKeys } from '@/utils/keychain';
+import { boxEncrypt, boxDecrypt } from '@/utils/cryptoHelper';
 import store from '@/store';
 
 let recoveryUrl = 'https://recovery.brightid.org';
@@ -60,12 +62,17 @@ class BackupService {
 
   async getSig() {
     try {
-      let { publicKey } = store.getState().recoveryData;
+      let { publicKey, secretKey } = store.getState().recoveryData;
       let res = await this.profileApi.get(
         `/profile/download/${b64ToUrlSafeB64(publicKey)}`,
       );
       BackupService.throwOnError(res);
-      return res.data.data;
+      const data = res.data.data;
+      if (data) {
+        data.name = boxDecrypt(data.encryptedName, data.signingKey, b64ToUint8Array(secretKey));
+        data.photo = boxDecrypt(data.encryptedPhoto, data.signingKey, b64ToUint8Array(secretKey));
+      }
+      return data;
     } catch (err) {
       console.warn(err);
     }
@@ -73,10 +80,14 @@ class BackupService {
 
   async setSig({
     id,
+    name,
+    photo,
     timestamp,
     signingKey,
   }: {
     id: string,
+    name: string,
+    photo: string,
     timestamp: string,
     signingKey: string,
   }) {
@@ -88,15 +99,20 @@ class BackupService {
       let sig = uInt8ArrayToB64(
         nacl.sign.detached(strToUint8Array(message), secretKey),
       );
-
-      let data = { signer: username, id, sig };
+      let data = {
+        signer: username,
+        signingKey: store.getState().user.publicKey,
+        sig,
+        id,
+        encryptedName: await boxEncrypt(name, signingKey, secretKey),
+        encryptedPhoto: await boxEncrypt(photo, signingKey, secretKey)
+      };
 
       let res = await this.profileApi.post(`/profile/upload`, {
         data,
         uuid: b64ToUrlSafeB64(signingKey),
       });
       BackupService.throwOnError(res);
-      console.log('setSig');
     } catch (err) {
       console.warn(err);
     }

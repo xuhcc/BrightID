@@ -6,6 +6,8 @@ export const REMOVE_RECOVERY_DATA = 'REMOVE_RECOVERY_DATA';
 export const setRecoveryData = (recoveryData: {
   publicKey: string,
   id: string,
+  name: string,
+  photo: string,
   secretKey: string,
   timestamp: number,
   sigs: Signature[],

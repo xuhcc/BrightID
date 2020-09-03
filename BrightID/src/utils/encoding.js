@@ -30,6 +30,15 @@ export function strToUint8Array(str: string) {
   return new Uint8Array(Buffer.from(str, 'ascii'));
 }
 
+export function utf8ToUint8Array(str: string) {
+  return new Uint8Array(Buffer.from(str, 'utf8'));
+}
+
+export function uInt8ArrayToUtf8(array: Uint8Array) {
+  const b = Buffer.from(array);
+  return b.toString('utf8');
+}
+
 export const objValues = (obj: Uint8Obj): Array<number> =>
   Object.values(obj).map(parseFloat);
 

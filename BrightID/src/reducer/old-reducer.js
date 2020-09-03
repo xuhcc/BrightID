@@ -99,6 +99,8 @@ export const initialState: State = {
   },
   recoveryData: {
     id: '',
+    name: '',
+    photo: '',
     publicKey: '',
     secretKey: '',
     timestamp: 0,
@@ -441,6 +443,8 @@ export const reducer = (state: State = initialState, action: action) => {
           publicKey: '',
           secretKey: '',
           id: '',
+          name: '',
+          photo: '',
           timestamp: 0,
           sigs: [],
         },

@@ -78,6 +78,12 @@ class RestoreScreen extends React.Component<Props, State> {
     });
   };
 
+  skip = () => {
+    console.log('skip called');
+    this.setState({ pass: '' });
+    this.restore();
+  };
+
   restore = () => {
     const { navigation } = this.props;
     this.setState({ restoreInProgress: true });
@@ -88,6 +94,13 @@ class RestoreScreen extends React.Component<Props, State> {
       .catch((err) => {
         this.resetState();
         err instanceof Error ? console.warn(err.message) : console.log(err);
+        if (err instanceof Error && err.message === 'bad password') {
+          Alert.alert(
+            'Uh Oh',
+            'Incorrect password!',
+            [{ text: 'OK', onPress: () => navigation.goBack() }],
+          );
+        }
         if (err instanceof Error && err.message === 'bad sigs') {
           Alert.alert(
             'Uh Oh',
@@ -98,27 +111,35 @@ class RestoreScreen extends React.Component<Props, State> {
       });
   };
 
-  renderButtonOrSpinner = () =>
-    !this.state.restoreInProgress ? (
-      <TouchableOpacity
-        style={styles.startRestoreButton}
-        onPress={this.restore}
-      >
-        <Text style={styles.buttonInnerText}>Start Restore</Text>
-      </TouchableOpacity>
-    ) : (
-      <View style={styles.loader}>
-        <Text style={styles.textInfo}>
-          Downloading data from backup server ...
-        </Text>
-        {this.state.total !== 0 && (
+  renderButtonOrSpinner = () => {
+    if (!this.state.restoreInProgress)
+      return (
+        <TouchableOpacity
+          style={styles.startRestoreButton}
+          onPress={this.restore}
+        >
+          <Text style={styles.buttonInnerText}>Start Restore</Text>
+        </TouchableOpacity>
+      );
+    else if (this.state.pass)
+      return (
+        <View style={styles.loader}>
           <Text style={styles.textInfo}>
-            {this.state.completed}/{this.state.total} completed
+            Downloading data from backup server ...
           </Text>
-        )}
+          {this.state.total !== 0 && (
+            <Text style={styles.textInfo}>
+              {this.state.completed}/{this.state.total} completed
+            </Text>
+          )}
+          <Spinner isVisible={true} size={97} type="Wave" color="#4990e2" />
+        </View>
+      );
+    else
+      return (
         <Spinner isVisible={true} size={97} type="Wave" color="#4990e2" />
-      </View>
-    );
+      );
+  };
 
   render() {
     const { pass } = this.state;
@@ -148,6 +169,16 @@ class RestoreScreen extends React.Component<Props, State> {
           <View style={styles.buttonContainer}>
             {this.renderButtonOrSpinner()}
           </View>
+          {!this.state.restoreInProgress && (
+            <View style={styles.skipContainer}>
+              <Text>
+                You can
+                <Text style={styles.skipLink} onPress={this.skip}> skip </Text>
+                loading connections and groups names and photos,
+                but you will not able to see those connections and groups anymore!
+              </Text>
+            </View>
+          )}
         </Container>
       </>
     );
@@ -235,6 +266,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 10,
     marginBottom: 10,
+  },
+  skipContainer: {
+    paddingTop: 30,
+    fontSize: 14,
+    margin: 30,
+    flexDirection: 'row',
+    flexWrap: 'wrap'
+  },
+  skipLink: {
+    color: 'blue',
   },
   loader: {
     justifyContent: 'center',

@@ -135,6 +135,8 @@ export const setupRecovery = async () => {
     publicKey: uInt8ArrayToB64(publicKey),
     secretKey: uInt8ArrayToB64(secretKey),
     id: '',
+    name: '',
+    photo: '',
     timestamp: Date.now(),
     sigs: [],
   };
@@ -180,6 +182,8 @@ export const handleSigs = async (data?: Signature) => {
     recoveryData.sigs.length === 0
   ) {
     recoveryData.id = data.id;
+    recoveryData.name = data.name;
+    recoveryData.photo = data.photo;
     recoveryData.sigs = [data];
     store.dispatch(setRecoveryData(recoveryData));
     Alert.alert('Info', 'One of your trusted connections signed your request');
@@ -221,7 +225,6 @@ export const fetchBackupData = async (key: string, pass: string) => {
     return decrypted;
   } catch (err) {
     emitter.emit('restoreProgress', 0);
-    Alert.alert('Error', 'Incorrect password!');
     throw new Error('bad password');
   }
 };
@@ -260,8 +263,21 @@ export const restoreUserData = async (pass: string) => {
 export const recoverData = async (pass: string) => {
   // fetch user data / save photo
   await createImageDirectory();
-  // throws if data is bad
-  const { userData, connections, groups } = await restoreUserData(pass);
+
+  if (pass) {
+    // throws if data is bad
+    var { userData, connections, groups } = await restoreUserData(pass);
+  } else {
+    const { id, publicKey, name, photo, secretKey } = store.getState().recoveryData;
+    const filename = await saveImage({
+      imageName: id,
+      base64Image: photo,
+    });
+    var userData = { id, name, publicKey, photo: { filename }, secretKey };
+    var connections = [];
+    var groups = [];
+    await saveSecretKey(id, secretKey);
+  }
 
   // set new signing key on the backend
   await setSigningKey();
@@ -289,7 +305,7 @@ export const recoverData = async (pass: string) => {
     }
   }
 
-  store.dispatch(setBackupCompleted(true));
+  store.dispatch(setBackupCompleted(pass != ''));
   // password is required to update backup when user makes new connections
   store.dispatch(setPassword(pass));
   store.dispatch(removeRecoveryData());
