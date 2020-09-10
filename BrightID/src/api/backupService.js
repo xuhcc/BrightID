@@ -9,6 +9,7 @@ import {
   b64ToUint8Array,
 } from '@/utils/encoding';
 import { obtainKeys } from '@/utils/keychain';
+import { noAvatar } from '@/utils/images';
 import { boxEncrypt, boxDecrypt } from '@/utils/cryptoHelper';
 import store from '@/store';
 
@@ -69,8 +70,15 @@ class BackupService {
       BackupService.throwOnError(res);
       const data = res.data.data;
       if (data) {
-        data.name = boxDecrypt(data.encryptedName, data.signingKey, b64ToUint8Array(secretKey));
-        data.photo = boxDecrypt(data.encryptedPhoto, data.signingKey, b64ToUint8Array(secretKey));
+        if (data.name) {
+          // if who is helping recover has latest version
+          data.name = boxDecrypt(data.encryptedName, data.signingKey, b64ToUint8Array(secretKey));
+          data.photo = boxDecrypt(data.encryptedPhoto, data.signingKey, b64ToUint8Array(secretKey));
+        } else {
+          // if who is helping recover has older version and does not send name and photo
+          data.name = 'reset your name';
+          data.photo = noAvatar();
+        }
       }
       return data;
     } catch (err) {
