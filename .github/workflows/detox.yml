@@ -48,8 +48,9 @@ jobs:
         if: steps.yarn-cache-debug.outputs.cache-hit != 'true'  # only install when no cache found
         run: yarn --frozen-lockfile
 
-      - name: Build detox
+      - name: detox build
         run: |
+          mv ./android/app/google-services.json-dev ./android/app/google-services.json
           yarn build:detox:android
 
       - name: Android Emulator
