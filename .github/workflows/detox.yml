@@ -1,0 +1,65 @@
+name: End-2-End Android
+
+on: [push]
+
+jobs:
+
+  detox:
+
+    runs-on: macos-latest
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: BrightID
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Use specific Java version for sdkmanager to work
+        uses: joschi/setup-jdk@v1
+        with:
+          java-version: 'openjdk8'
+          architecture: 'x64'
+
+      - name: Download Android Emulator Image
+        run: |
+          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-29;google_apis;x86"
+          echo "no" | $ANDROID_HOME/tools/bin/avdmanager create avd --force --name Pixel_2_XL_API_28 --device "Nexus 5X" -k 'system-images;android-29;google_apis;x86'
+          $ANDROID_HOME/emulator/emulator -list-avds
+
+      - name: Cache node modules
+        id: yarn-cache-debug # needed below to check for cache hit or miss
+        uses: actions/cache@v2
+        with:
+          path: './BrightID/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('./BrightID/yarn.lock') }}
+
+      - name: Install dependencies
+        if: steps.yarn-cache-debug.outputs.cache-hit != 'true'  # only install when no cache found
+        run: yarn --frozen-lockfile
+
+      - name: Build detox
+        run: |
+          yarn build:detox:android
+
+      - name: Android Emulator
+        timeout-minutes: 10
+        continue-on-error: true
+        run: |
+          echo "Starting emulator"
+          nohup $ANDROID_HOME/emulator/emulator -avd Pixel_2_XL_API_28 -no-audio -no-snapshot -no-window &
+          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d '\r') ]]; do sleep 1; done; input keyevent 82'
+          $ANDROID_HOME/platform-tools/adb devices
+          echo "Emulator started"
+      - name: Android Detox
+        run: yarn start:detox & yarn test:android -- --headless
