@@ -44,9 +44,9 @@ jobs:
 
       - name: run detox tests
         uses: reactivecircus/android-emulator-runner@v2
-          with:
-            api-level: ${{ matrix.api-level }}
-            arch: x86_64
-            profile: Nexus 6
-            avd-name: Pixel_2_XL_API_28
-            script: yarn start:detox & yarn test:android -- --headless
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          profile: Nexus 6
+          avd-name: Pixel_2_XL_API_28
+          script: yarn start:detox & yarn test:android -- --headless
