@@ -11,6 +11,7 @@ import store from '@/store';
 import emitter from '@/emitter';
 import { clearNewGroupCoFounders } from '@/actions';
 import { DEVICE_TYPE, ORANGE, DEVICE_LARGE } from '@/utils/constants';
+import { toSearchString } from '@/utils/strings';
 import Spinner from 'react-native-spinkit';
 import { createNewGroup } from '../actions';
 import NewGroupCard from './NewGroupCard';
@@ -18,6 +19,15 @@ import NewGroupCard from './NewGroupCard';
 // type State = {
 //   creating: boolean,
 // };
+
+const ITEM_HEIGHT = DEVICE_LARGE ? 94 : 80;
+const ITEM_MARGIN = DEVICE_LARGE ? 11.8 : 6;
+
+const getItemLayout = (data, index) => ({
+  length: ITEM_HEIGHT + ITEM_MARGIN,
+  offset: (ITEM_HEIGHT + ITEM_MARGIN) * index,
+  index,
+});
 
 export class NewGroupScreen extends React.Component<Props> {
   constructor(props) {
@@ -46,11 +56,9 @@ export class NewGroupScreen extends React.Component<Props> {
   filterConnections = () => {
     const { connections, searchParam } = this.props;
     return connections
-      .filter((item) =>
-        `${item.name}`
-          .toLowerCase()
-          .replace(/\s/g, '')
-          .includes(searchParam.toLowerCase().replace(/\s/g, '')),
+      .filter((item) => 
+        toSearchString(`${item.name}`)
+        .includes(toSearchString(searchParam)),
       )
       .filter((item) => item.status === 'verified');
   };
@@ -128,11 +136,13 @@ export class NewGroupScreen extends React.Component<Props> {
               {connections.length > 0 ? (
                 <FlatList
                   style={styles.connectionsContainer}
+                  contentContainerStyle={{ paddingBottom: 50, flexGrow: 1 }}
                   data={connections}
                   keyExtractor={({ id }, index) => id + index}
                   renderItem={this.renderConnection}
                   showsHorizontalScrollIndicator={false}
                   showsVerticalScrollIndicator={false}
+                  getItemLayout={getItemLayout}
                 />
               ) : (
                 <View>

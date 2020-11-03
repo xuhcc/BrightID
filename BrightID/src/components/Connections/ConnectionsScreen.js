@@ -17,6 +17,7 @@ import FloatingActionButton from '@/components/Helpers/FloatingActionButton';
 import EmptyList from '@/components/Helpers/EmptyList';
 import { deleteConnection } from '@/actions';
 import { ORANGE, DEVICE_LARGE, LIGHTBLUE } from '@/utils/constants';
+import { toSearchString } from '@/utils/strings';
 import Material from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import ConnectionCard from './ConnectionCard';
@@ -32,24 +33,41 @@ import { handleFlagging } from './models/flagConnection';
 
 const ICON_SIZE = 26;
 
+const ITEM_HEIGHT = DEVICE_LARGE ? 102 : 92;
+
+const getItemLayout = (data, index) => ({
+  length: ITEM_HEIGHT,
+  offset: ITEM_HEIGHT * index,
+  index,
+});
+
+const renderItem = ({ item, index }) => {
+  item.index = index;
+  return <ConnectionCard {...item} />;
+};
+
+const renderHiddenItem = ({ item }, rowMap) => <ActionComponent {...item} />;
+
 const ActionComponent = ({ id, name, secretKey, status }) => {
   const dispatch = useDispatch();
   const { showActionSheetWithOptions } = useActionSheet();
   const disabled = status === 'initiated';
-  const isStale = status === 'stale';
+  const canRemove = status === 'stale' || status === 'deleted';
 
   let flaggingOptions = [
+    'Flag as Spammer',
     'Flag as Duplicate',
     'Flag as Fake',
     'Flag as Deceased',
     'Join All Groups',
     'Connect to other fake connections',
+    'Reconnect',
     'cancel',
   ];
   // comment out for test release
   if (!__DEV__) {
     // remove debug functionality
-    flaggingOptions.splice(3, 2);
+    flaggingOptions.splice(4, 3);
   }
 
   const FlagButton = () => (
@@ -86,29 +104,29 @@ const ActionComponent = ({ id, name, secretKey, status }) => {
     </TouchableOpacity>
   );
 
-  const unflagOptions = ['cancel'];
+  // const unflagOptions = ['cancel'];
 
-  const UnFlagButton = () => (
-    <TouchableOpacity
-      testID="unFlagBtn"
-      style={[styles.actionCard, { backgroundColor: '#aaa' }]}
-      disabled={disabled}
-      onPress={() => {
-        showActionSheetWithOptions(
-          {
-            options: unflagOptions,
-            cancelButtonIndex: unflagOptions.length - 1,
-            title: 'Try Again Later!',
-            message: 'This feature is not ready yet.',
-          },
-          () => {},
-        );
-      }}
-    >
-      <Material size={ICON_SIZE} name="flag-remove" color="#fff" />
-      <Text style={styles.actionText}>Unflag</Text>
-    </TouchableOpacity>
-  );
+  // const UnFlagButton = () => (
+  //   <TouchableOpacity
+  //     testID="unFlagBtn"
+  //     style={[styles.actionCard, { backgroundColor: '#aaa' }]}
+  //     disabled={disabled}
+  //     onPress={() => {
+  //       showActionSheetWithOptions(
+  //         {
+  //           options: unflagOptions,
+  //           cancelButtonIndex: unflagOptions.length - 1,
+  //           title: 'Try Again Later!',
+  //           message: 'This feature is not ready yet.',
+  //         },
+  //         () => {},
+  //       );
+  //     }}
+  //   >
+  //     <Material size={ICON_SIZE} name="flag-remove" color="#fff" />
+  //     <Text style={styles.actionText}>Unflag</Text>
+  //   </TouchableOpacity>
+  // );
 
   const removeOptions = ['Remove', 'cancel'];
 
@@ -191,7 +209,7 @@ const ActionComponent = ({ id, name, secretKey, status }) => {
 
   return (
     <View style={styles.actionContainer}>
-      {isStale ? <RemoveButton /> : <FlagButton />}
+      {canRemove ? <RemoveButton /> : <FlagButton />}
     </View>
   );
 };
@@ -205,9 +223,9 @@ const filterConnectionsSelector = createSelector(
   connectionsSelector,
   searchParamSelector,
   (connections, searchParam) => {
-    const searchString = searchParam.toLowerCase().replace(/\s/g, '');
+    const searchString = toSearchString(searchParam);
     return connections.filter((item) =>
-      `${item.name}`.toLowerCase().replace(/\s/g, '').includes(searchString),
+      toSearchString(`${item.name}`).includes(searchString),
     );
   },
 );
@@ -259,13 +277,10 @@ export const ConnectionsScreen = () => {
             style={styles.connectionsContainer}
             data={connections}
             keyExtractor={({ id }, index) => id + index}
-            renderItem={({ item, index }) => {
-              item.index = index;
-              return <ConnectionCard {...item} />;
-            }}
-            renderHiddenItem={({ item }, rowMap) => (
-              <ActionComponent {...item} />
-            )}
+            renderItem={renderItem}
+            renderHiddenItem={renderHiddenItem}
+            disableHiddenLayoutCalculation={true}
+            getItemLayout={getItemLayout}
             leftOpenValue={0}
             rightOpenValue={DEVICE_LARGE ? -60 : -55}
             swipeToOpenPercent={22}

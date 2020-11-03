@@ -89,7 +89,7 @@ export const HomeScreen = (props) => {
         imageName: id,
         base64Image: uri,
       });
-      setPhoto({ filename });
+      dispatch(setPhoto({ filename }));
       setProfilePhoto(await retrieveImage(filename));
     } catch (err) {
       console.log(err);
@@ -104,7 +104,7 @@ export const HomeScreen = (props) => {
         imageName: id,
         base64Image: uri,
       });
-      setPhoto({ filename });
+      dispatch(setPhoto({ filename }));
       setProfilePhoto(await retrieveImage(filename));
     } catch (err) {
       console.log(err);
@@ -264,7 +264,11 @@ export const HomeScreen = (props) => {
           style={styles.countsCard}
           onPress={() => {
             dispatch(setActiveNotification(null));
-            navigation.navigate('Apps');
+            navigation.navigate('Apps', {
+              baseUrl: '',
+              context: '',
+              contextId: '',
+            });
           }}
         >
           <Text testID="AppsCount" style={styles.countsNumberText}>
@@ -341,7 +345,7 @@ export const HomeScreen = (props) => {
         onPress={(index) => {
           if (index === 0) {
             Linking.openURL(discordUrl).catch((err) =>
-              console.error('An error occurred', err),
+              console.log('An error occurred', err),
             );
           }
         }}

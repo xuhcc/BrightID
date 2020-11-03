@@ -87,7 +87,7 @@ const AppCard = (props) => {
   const openApp = () => {
     Alert.alert(
       '',
-      `To find out more about ${context}, check out their website!`,
+      `To find out more about ${name}, check out their website!`,
       [
         {
           text: 'Sure',
@@ -163,7 +163,7 @@ const AppCard = (props) => {
   };
 
   return (
-    <View style={{ ...styles.container, ...style }}>
+    <View style={{ ...styles.container, ...style }} testID={`app-${name}`}>
       <TouchableOpacity style={styles.link} onPress={openApp}>
         <Image
           source={{
