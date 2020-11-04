@@ -50,8 +50,4 @@ jobs:
           profile: Nexus 6
           avd-name: Pixel_2_XL_API_28
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -cores 2
-          script: |
-            cd BrightID
-            yarn start:detox &
-            yarn test:android
-            cd ..
+          script: cd BrightID; yarn start:detox & yarn test:android; cd ..
