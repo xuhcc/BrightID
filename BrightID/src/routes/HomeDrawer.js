@@ -17,7 +17,6 @@ import { useHeaderHeight } from '@react-navigation/stack';
 import { ORANGE } from '@/utils/constants';
 import { DEVICE_LARGE, DEVICE_IOS } from '@/utils/deviceConstants';
 import { SvgXml } from 'react-native-svg';
-import codePush from 'react-native-code-push';
 import verificationSticker from '@/static/verification-sticker.svg';
 import { retrieveImage, photoDirectory } from '@/utils/filesystem';
 import editProfile from '@/static/edit_profile.svg';
@@ -200,26 +199,6 @@ const CustomDrawerContent = (props) => {
             index: 1,
             routes: [{ name: 'Home' }, { name: 'Copy Explorer Code' }],
           });
-        }}
-      />
-      <CustomItem
-        style={styles.drawerItem}
-        labelStyle={styles.labelStyle}
-        inactiveTintColor="#000"
-        label="Check for Updates"
-        icon={getIcon('faqIcon')}
-        onPress={() => {
-          codePush.sync(
-            {
-              updateDialog: true,
-              installMode: codePush.InstallMode.IMMEDIATE,
-            },
-            (status) => {
-              if (status === codePush.SyncStatus.UP_TO_DATE) {
-                Alert.alert('Check for Update', 'BrightID is up to date.');
-              }
-            },
-          );
         }}
       />
       <CustomItem
